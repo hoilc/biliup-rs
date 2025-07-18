@@ -16,7 +16,7 @@ use crate::uploader::bilibili::{BiliBili, Video};
 use crate::uploader::line::upos::Upos;
 use std::time::Instant;
 use tracing::info;
-use rand::distributions::uniform::UniformFloat;
+use rand::distributions::uniform::{UniformFloat, UniformSampler};
 use tokio::time::sleep;
 
 // pub mod cos;
