@@ -277,6 +277,11 @@ pub async fn upload(
             total_size as f64 / 1000. / t as f64
         );
         videos.push(video);
+        // 如果上传耗时不足十秒，则等待10秒再上传下一个视频
+        if t < 10_000 {
+            info!("Waiting for 10 seconds...");
+            tokio::time::sleep(Duration::from_secs(10)).await;
+        }
     }
     Ok(videos)
 }
