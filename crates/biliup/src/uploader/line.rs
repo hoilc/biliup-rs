@@ -201,7 +201,7 @@ impl Line {
                 if response_text.contains("上传视频过快") && retries < 5 {
                     retries += 1;
                     let jitter_factor = UniformFloat::<f64>::sample_single(0., 1., &mut rand::thread_rng());
-                    let jittered_wait = f64::min(jitter_factor + (wait as f64), 64.);
+                    let jittered_wait = f64::min(jitter_factor + (wait as f64), 1800.);
                     info!(
                         "Upload too fast, retrying #{}. Sleeping {:?} before next attempt.",
                         retries,
