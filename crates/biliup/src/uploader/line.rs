@@ -178,12 +178,9 @@ impl Line {
             "size": total_size,
         });
         info!("pre_upload: {}", params);
-        
+        let mut response;
         let mut retries = 0;
         let mut wait = 60;
-        
-        let response;
-        
         loop {
             response = bili
                 .client
