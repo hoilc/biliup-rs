@@ -6,6 +6,7 @@ use reqwest::{Body, RequestBuilder};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::ffi::OsStr;
+use std::time::Duration;
 
 use crate::client::StatelessClient;
 use crate::error::Kind::Custom;
@@ -15,6 +16,8 @@ use crate::uploader::bilibili::{BiliBili, Video};
 use crate::uploader::line::upos::Upos;
 use std::time::Instant;
 use tracing::info;
+use rand::distributions::UniformFloat;
+use tokio::time::sleep;
 
 // pub mod cos;
 // pub mod kodo;
@@ -164,11 +167,6 @@ impl Line {
     pub async fn pre_upload(&self, bili: &BiliBili, video_file: VideoFile) -> Result<Parcel> {
         let total_size = video_file.total_size;
         let file_name = video_file.file_name.clone();
-        // let profile = if let Uploader::Upos = self.os {
-        //     "ugcupos/bup"
-        // } else {
-        //     "ugcupos/bupfetch"
-        // };
         let profile = "ugcupos/bup";
         let params = json!({
             "r": self.os,
@@ -180,21 +178,49 @@ impl Line {
             "size": total_size,
         });
         info!("pre_upload: {}", params);
-        let response = bili
-            .client
-            .get(format!(
-                "https://member.bilibili.com/preupload?{}",
-                self.query
-            ))
-            .query(&params)
-            .send()
-            .await?;
-        if !response.status().is_success() {
-            return Err(Custom(format!(
-                "Failed to pre_upload from {}",
-                response.text().await?
-            )));
+        
+        let mut retries = 0;
+        let mut wait = 60;
+        
+        let response;
+        
+        loop {
+            response = bili
+                .client
+                .get(format!(
+                    "https://member.bilibili.com/preupload?{}",
+                    self.query
+                ))
+                .query(&params)
+                .send()
+                .await?;
+
+            if !response.status().is_success() {
+                let response_text = response.text().await?;
+                
+                if response_text.contains("上传视频过快") && retries < 5 {
+                    retries += 1;
+                    let jitter_factor = UniformFloat::<f64>::sample_single(0., 1., &mut rand::thread_rng());
+                    let jittered_wait = f64::min(jitter_factor + (wait as f64), 64.);
+                    info!(
+                        "Upload too fast, retrying #{}. Sleeping {:?} before next attempt.",
+                        retries,
+                        jittered_wait
+                    );
+                    sleep(Duration::from_secs_f64(jittered_wait)).await;
+                    wait *= 2;
+                    continue;
+                }
+                
+                return Err(Custom(format!(
+                    "Failed to pre_upload from {}",
+                    response_text
+                )));
+            }
+            
+            break;
         }
+        
         match self.os {
             Uploader::Upos => Ok(Parcel {
                 line: Bucket::Upos(response.json().await?),
