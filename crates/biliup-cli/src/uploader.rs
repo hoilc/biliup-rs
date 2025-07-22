@@ -280,8 +280,8 @@ pub async fn upload(
         videos.push(video);
         // 如果上传耗时不足十秒，则等待6秒再上传下一个视频
         if t < 10_000 {
-            info!("Waiting for 6 seconds...");
-            tokio::time::sleep(Duration::from_secs(6)).await;
+            info!("Waiting for 10 seconds...");
+            tokio::time::sleep(Duration::from_secs(10)).await;
         }
     }
     Ok(videos)

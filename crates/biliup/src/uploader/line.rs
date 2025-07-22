@@ -195,7 +195,8 @@ impl Line {
             if !response.status().is_success() {
                 let response_text = response.text().await?;
                 
-                if response_text.contains("上传视频过快") && retries < 5 {
+                if response_text.contains("上传视频过快") && retries <= 5 {
+                    info!("Response: {}", response_text);
                     retries += 1;
                     let jitter_factor = UniformFloat::<f64>::sample_single(0., 1., &mut rand::thread_rng());
                     let jittered_wait = f64::min(jitter_factor + (wait as f64), 1800.);
