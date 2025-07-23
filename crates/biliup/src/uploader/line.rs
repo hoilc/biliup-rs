@@ -180,7 +180,7 @@ impl Line {
         info!("pre_upload: {}", params);
         let mut response;
         let mut retries = 0;
-        let mut wait = 60;
+        let mut wait = 100;
         loop {
             response = bili
                 .client
