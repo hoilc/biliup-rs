@@ -244,7 +244,9 @@ pub async fn upload(
         None => Probe::probe(&client.client).await.unwrap_or_default(),
     };
     // let line = line::kodo();
-    for video_path in video_path {
+    let total_videos = video_path.len();
+    for (index, video_path) in video_path.iter().enumerate() {
+        info!("开始上传第 {} / {} 个视频: {}", index + 1, total_videos, video_path.display());
         info!("{line:?}");
         let video_file = VideoFile::new(video_path)
             .with_context(|| format!("file {}", video_path.to_string_lossy()))?;
