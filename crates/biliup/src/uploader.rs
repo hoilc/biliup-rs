@@ -9,7 +9,6 @@ use std::ops::DerefMut;
 use std::path::Path;
 use std::pin::Pin;
 use std::task::{Context, Poll};
-use tokio::time::timeout;
 
 pub mod bilibili;
 pub mod credential;
@@ -118,14 +117,7 @@ pub struct VideoFile {
 impl VideoFile {
     pub fn new(filepath: &std::path::Path) -> io::Result<Self> {
         let file = std::fs::File::open(filepath)?;
-        // 使用tokio的timeout包装metadata读取，设置超时时间为30秒
-        let total_size = match timeout(Duration::from_secs(30), async {
-            let metadata = file.metadata();
-            metadata
-        }).await {
-            Ok(result) => result?.len(),
-            Err(_) => return Err(io::Error::new(ErrorKind::TimedOut, "Reading file metadata timed out")),
-        };
+        let total_size = file.metadata()?.len();
         let file_name = filepath
             .file_name()
             .and_then(|file_name| file_name.to_str())
