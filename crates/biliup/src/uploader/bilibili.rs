@@ -270,23 +270,56 @@ impl BiliBili {
             payload
         };
 
-        let ret: ResponseData = reqwest::Client::proxy_builder(proxy)
-            .user_agent("Mozilla/5.0 BiliDroid/7.80.0 (bbcallen@gmail.com) os/android model/MI 6 mobi_app/android build/7800300 channel/bili innerVer/7800310 osVer/13 network/2")
-            .timeout(Duration::new(60, 0))
-            .build()?
-            .post("https://member.bilibili.com/x/vu/app/add")
-            .query(&payload)
-            .json(studio)
-            .send()
-            .await?
-            .json()
-            .await?;
-        info!("{:?}", ret);
-        if ret.code == 0 {
-            info!("APP接口投稿成功");
-            Ok(ret)
-        } else {
-            Err(Kind::Custom(format!("{:?}", ret)))
+        loop {
+            let ret: ResponseData = reqwest::Client::proxy_builder(proxy)
+                .user_agent("Mozilla/5.0 BiliDroid/7.80.0 (bbcallen@gmail.com) os/android model/MI 6 mobi_app/android build/7800300 channel/bili innerVer/7800310 osVer/13 network/2")
+                .timeout(Duration::new(60, 0))
+                .build()?
+                .post("https://member.bilibili.com/x/vu/app/add")
+                .query(&payload)
+                .json(studio)
+                .send()
+                .await?
+                .json()
+                .await?;
+            info!("{:?}", ret);
+            
+            if ret.message.contains("投稿过于频繁") {
+                info!("等待手动过图形验证，创建信号文件 /tmp/biliup_pause");
+                // 创建信号文件
+                match std::fs::File::create("/tmp/biliup_pause") {
+                    Ok(_file) => {
+                        #[cfg(target_family = "unix")]
+                        {
+                            use std::os::unix::fs::PermissionsExt;
+                            let _ = _file.set_permissions(std::fs::Permissions::from_mode(0o666));
+                        }
+                    },
+                    Err(e) => {
+                        warn!("创建信号文件失败: {}", e);
+                    }
+                }
+                
+                // 定期检查信号文件是否被删除
+                loop {
+                    tokio::time::sleep(Duration::from_secs(60)).await;
+                    if !std::path::Path::new("/tmp/biliup_pause").exists() {
+                        info!("信号文件已被删除，重试投稿");
+                        break;
+                    } else {
+                        info!("信号文件仍然存在，继续等待");
+                    }
+                }
+                // 继续下一次循环以重试投稿
+                continue;
+            }
+            
+            if ret.code == 0 {
+                info!("APP接口投稿成功");
+                return Ok(ret);
+            } else {
+                return Err(Kind::Custom(format!("{:?}", ret)));
+            }
         }
     }
 
