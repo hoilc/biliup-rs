@@ -6,7 +6,7 @@ use clap::ValueEnum;
 pub enum SubmitOption {
     // Client,
     App,
-    // Web,
+    Web,
     BCutAndroid,
 }
 
@@ -15,6 +15,7 @@ impl SubmitOption {
     pub fn parse_str(s: &str) -> Result<Self, String> {
         match s.to_lowercase().as_str() {
             "app" => Ok(SubmitOption::App),
+            "web" => Ok(SubmitOption::Web),
             "bcutandroid" | "b-cut-android" | "bcut_android" => Ok(SubmitOption::BCutAndroid),
             _ => Err(format!("Unknown submit option: {}", s))
         }
