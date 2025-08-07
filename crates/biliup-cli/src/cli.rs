@@ -164,14 +164,6 @@ pub enum UploadLine {
     Alia,
 }
 
-#[derive(Debug, Clone, ValueEnum)]
-pub enum SubmitOption {
-    Client,
-    App,
-    Web,
-    BCutAndroid,
-}
-
 fn human_size(s: &str) -> Result<u64, String> {
     let ret = match s.as_bytes() {
         [init @ .., b'K'] => parse_u8(init)? * 1000.0,
