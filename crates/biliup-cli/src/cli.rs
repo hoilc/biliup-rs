@@ -35,7 +35,7 @@ pub enum Commands {
     /// 上传视频
     Upload {
         /// 提交接口
-        #[arg(long, default_value = "bcutandroid")]
+        #[arg(long, default_value = "b-cut-android")]
         submit: SubmitOption,
 
         // Optional name to operate on
