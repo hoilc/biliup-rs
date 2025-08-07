@@ -158,8 +158,8 @@ pub async fn append(
     
     match submit {
         SubmitOption::App => bilibili.edit_by_app(&studio, proxy).await?,
-        SubmitOption::Web => bilibili.edit_by_web(&studio, proxy).await?,
-        _ => bilibili.edit_by_app(&studio).await?,
+        SubmitOption::Web => bilibili.edit_by_web(&studio).await?,
+        _ => bilibili.edit_by_app(&studio, proxy).await?,
     };
     
     Ok(())
