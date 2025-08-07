@@ -1,10 +1,11 @@
-use crate::cli::{SubmitOption, UploadLine};
+use crate::cli::UploadLine;
 use anyhow::{Context, Result, anyhow};
 use biliup::client::StatelessClient;
 use biliup::error::Kind;
 use biliup::uploader::bilibili::{BiliBili, Studio, Vid, Video};
 use biliup::uploader::credential::{Credential, LoginInfo};
 use biliup::uploader::line::Probe;
+use biliup::uploader::util::SubmitOption;
 use biliup::uploader::{VideoFile, credential, line, load_config};
 use bytes::{Buf, Bytes};
 use clap::ValueEnum;
@@ -93,6 +94,7 @@ pub async fn upload_by_command(
     // }
     // 说不定会适配 web 呢...?
     match submit {
+        SubmitOption::BCutAndroid => bili.submit_by_bcut_android(&studio, proxy).await?,
         SubmitOption::App => bili.submit_by_app(&studio, proxy).await?,
         _ => bili.submit(&studio, proxy).await?,
     };
@@ -103,6 +105,7 @@ pub async fn upload_by_command(
 pub async fn upload_by_config(
     config: PathBuf,
     user_cookie: PathBuf,
+    submit: SubmitOption,
     proxy: Option<&str>,
 ) -> Result<()> {
     // println!("number of concurrent futures: {limit}");
@@ -129,7 +132,12 @@ pub async fn upload_by_config(
             config.limit,
         )
         .await?;
-        bilibili.submit(&studio, proxy).await?;
+        
+        match submit {
+            SubmitOption::BCutAndroid => bilibili.submit_by_bcut_android(&studio, proxy).await?,
+            SubmitOption::App => bilibili.submit_by_app(&studio, proxy).await?,
+            _ => bilibili.submit(&studio, proxy).await?,
+        };
     }
     Ok(())
 }
@@ -140,14 +148,20 @@ pub async fn append(
     video_path: Vec<PathBuf>,
     line: Option<UploadLine>,
     limit: usize,
+    submit: SubmitOption,
     proxy: Option<&str>,
 ) -> Result<()> {
     let bilibili = login_by_cookies(user_cookie, proxy).await?;
     let mut uploaded_videos = upload(&video_path, &bilibili, line, limit).await?;
     let mut studio = bilibili.studio_data(&vid, proxy).await?;
     studio.videos.append(&mut uploaded_videos);
-    bilibili.edit(&studio, proxy).await?;
-    // studio.edit(&login_info).await?;
+    
+    match submit {
+        SubmitOption::BCutAndroid => bilibili.submit_by_bcut_android(&studio, proxy).await?,
+        SubmitOption::App => bilibili.submit_by_app(&studio, proxy).await?,
+        _ => bilibili.submit(&studio, proxy).await?,
+    };
+    
     Ok(())
 }
 

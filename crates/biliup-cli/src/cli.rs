@@ -1,4 +1,5 @@
 use biliup::uploader::bilibili::{Studio, Vid};
+use biliup::uploader::util::SubmitOption;
 use clap::{Parser, Subcommand, ValueEnum};
 
 use std::path::PathBuf;
@@ -164,6 +165,7 @@ pub enum SubmitOption {
     Client,
     App,
     Web,
+    BCutAndroid,
 }
 
 fn human_size(s: &str) -> Result<u64, String> {

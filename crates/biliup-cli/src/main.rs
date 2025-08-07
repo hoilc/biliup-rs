@@ -70,14 +70,16 @@ async fn main() -> Result<()> {
         Commands::Upload {
             video_path: _,
             config: Some(config),
+            submit,
             ..
-        } => upload_by_config(config, cli.user_cookie, cli.proxy.as_deref()).await?,
+        } => upload_by_config(config, cli.user_cookie, submit, cli.proxy.as_deref()).await?,
         Commands::Append {
             video_path,
             vid,
             line,
             limit,
             studio: _,
+            submit,
         } => {
             append(
                 cli.user_cookie,
@@ -85,6 +87,7 @@ async fn main() -> Result<()> {
                 video_path,
                 line,
                 limit,
+                submit,
                 cli.proxy.as_deref(),
             )
             .await?
