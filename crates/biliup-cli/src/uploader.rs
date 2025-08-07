@@ -157,9 +157,8 @@ pub async fn append(
     studio.videos.append(&mut uploaded_videos);
     
     match submit {
-        SubmitOption::BCutAndroid => bilibili.submit_by_bcut_android(&studio, proxy).await?,
-        SubmitOption::App => bilibili.submit_by_app(&studio, proxy).await?,
-        _ => bilibili.submit(&studio, proxy).await?,
+        SubmitOption::App => bilibili.edit_by_app(&studio, proxy).await?,
+        _ => bilibili.edit_by_web(&studio).await?,
     };
     
     Ok(())
